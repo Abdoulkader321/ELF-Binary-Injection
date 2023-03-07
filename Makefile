@@ -5,7 +5,7 @@ EXE = isos_inject
 all: isos_inject
 
 isos_inject: isos_inject.o
-	$(CC) $(CFLAGS) -o $@ $^;
+	$(CC) $(CFLAGS) -o $@ $^ -lbfd;
 
 isos_inject.o: isos_inject.c argp_parser.c
 	$(CC) $(CFLAGS) -c $^;
