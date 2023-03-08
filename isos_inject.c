@@ -1,7 +1,6 @@
 #include "argp_parser.c"
 #include <argp.h>
 #include <bfd.h>
-#include <err.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -27,21 +26,21 @@ int main(int argc, char **argv) {
   /* Opening binary with libbfd */
   bfd *bfd_file = bfd_openr(arguments.elf_file_to_analyze, NULL);
   if (bfd_file == NULL) {
-    fprintf(stderr, "Error while opening the file %s with libbfd",
-            arguments.elf_file_to_analyze);
-    exit(EXIT_FAILURE);
+    errx(EXIT_FAILURE, "Error while opening the file %s with libbfd",
+         arguments.elf_file_to_analyze);
   }
 
-  /* Check binary format and architecture */
+  /* Check that the binary is an ELF, executable of architecture 64-bit */
   if (bfd_check_format(bfd_file, bfd_object) &&
+      bfd_get_section_by_name(bfd_file, ".init") != NULL &&
       bfd_get_arch_size(bfd_file) == ARCHITECTURE_SIZE) {
 
-    fprintf(stdout, "%s is of ELF format and of architecture %d bit. \n",
+    fprintf(stdout, "Success: %s is an excutable ELF of architecture %d bit.",
             arguments.elf_file_to_analyze, ARCHITECTURE_SIZE);
   } else {
-    fprintf(stderr, "%s must be of ELF format and of architecture %d bit. \n",
-            arguments.elf_file_to_analyze, ARCHITECTURE_SIZE);
-    exit(EXIT_FAILURE);
+    errx(EXIT_FAILURE,
+         "Error: %s must be an excutable ELF of architecture %d bit.",
+         arguments.elf_file_to_analyze, ARCHITECTURE_SIZE);
   }
 
   /* Close binary*/

@@ -1,4 +1,5 @@
 #include <argp.h>
+#include <err.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -65,8 +66,8 @@ error_t parse_opt(int key, char *arg, struct argp_state *state) {
 
   case ARGP_KEY_END:
     if (arguments->argCount != EXPECTED_NUMBER_OF_ARGS) {
-      fprintf(stderr, "All the required arguments must be provided\n");
-      argp_usage(state);
+      errx(EXIT_FAILURE, "Error: All the required arguments must be "
+                         "provided.\nTry ./isos_inject --help");
     }
     break;
   default:
