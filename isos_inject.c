@@ -38,12 +38,14 @@ int main(int argc, char **argv) {
     fprintf(stdout, "Success: %s is an excutable ELF of architecture %d bit.",
             arguments.elf_file_to_analyze, ARCHITECTURE_SIZE);
   } else {
+
+    bfd_close(bfd_file); /* Close binary */
     errx(EXIT_FAILURE,
          "Error: %s must be an excutable ELF of architecture %d bit.",
          arguments.elf_file_to_analyze, ARCHITECTURE_SIZE);
   }
 
-  /* Close binary*/
+  /* Close binary */
   bfd_close(bfd_file);
 
   return EXIT_SUCCESS;
