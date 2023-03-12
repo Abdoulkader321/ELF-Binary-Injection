@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 
   /* Check that the binary is an ELF, executable of architecture 64-bit */
   if (bfd_check_format(bfd_file, bfd_object) &&
-      bfd_get_section_by_name(bfd_file, ".init") != NULL &&
+      ((bfd_get_file_flags(bfd_file) & EXEC_P) != 0) &&
       bfd_get_arch_size(bfd_file) == ARCHITECTURE_SIZE) {
 
     fprintf(stdout, "Success: %s is an excutable ELF of architecture %d bit.",
