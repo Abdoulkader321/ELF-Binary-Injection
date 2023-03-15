@@ -2,6 +2,7 @@
 #include <err.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define EXPECTED_NUMBER_OF_ARGS 4 /* The last boolean argument is optionnal*/
 
@@ -36,6 +37,7 @@ struct arguments {
 /* Parser */
 error_t parse_opt(int key, char *arg, struct argp_state *state) {
   struct arguments *arguments = state->input;
+  char *endPtr;
 
   switch (key) {
 
@@ -56,8 +58,14 @@ error_t parse_opt(int key, char *arg, struct argp_state *state) {
     break;
 
   case 'a':
-    arguments->injected_code_base_address = atoi(arg);
+
+    arguments->injected_code_base_address = strtol(arg, &endPtr, 10);
     arguments->argCount++;
+
+    if (strcmp(endPtr, "")) {
+      errx(EXIT_FAILURE, "A valid base-address must be provided");
+    }
+
     break;
 
   case 'm':
