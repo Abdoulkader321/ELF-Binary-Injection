@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+#define PT_NOTE 4 /* Auxiliary information */
+
 typedef struct
 {
   unsigned char	e_ident[16];	/* Magic number and other info */
@@ -19,7 +21,7 @@ typedef struct
   uint16_t	e_shstrndx;		/* Section header string table index */
 } Elf64_Ehdr;
 
-typedef struct
+typedef struct 
 {
   uint32_t	p_type;			/* Segment type */
   uint32_t	p_flags;		/* Segment flags */
