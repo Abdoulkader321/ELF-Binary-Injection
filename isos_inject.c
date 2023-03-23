@@ -24,7 +24,7 @@ void open_binary_with_libbfd(struct arguments *arguments) {
 
   /* Check that the binary is an ELF, executable of architecture 64-bit */
   if (bfd_check_format(bfd_file, bfd_object) &&
-      ((bfd_get_file_flags(bfd_file) & EXEC_P) != 0) &&
+      ((bfd_get_file_flags(bfd_file) & (unsigned int) EXEC_P) != 0) &&
       bfd_get_arch_size(bfd_file) == ARCHITECTURE_SIZE) {
 
     fprintf(stdout, "Success: %s is an excutable ELF of architecture %d bit.",
@@ -62,14 +62,14 @@ int main(int argc, char **argv) {
   }
 
   /* To get informations on the binary like his size */
-  struct stat sb;
-  if (fstat(fd, &sb) == -1) {
+  struct stat fstat_structure;
+  if (fstat(fd, &fstat_structure) == -1) {
     close(fd);
     perror("fstat");
     exit(EXIT_FAILURE);
   }
 
-  char *addr = mmap(0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  char *addr = mmap(0, fstat_structure.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (addr == MAP_FAILED) {
     close(fd);
     perror("mmap");
