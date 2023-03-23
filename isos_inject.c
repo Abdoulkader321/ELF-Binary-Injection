@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
   }
 
   /* Mapping between a process address space and the binary. Binary can now be
-   * accessed like an array.  */
+   * accessed like an array. */
   char *addr = mmap(0, fstat_structure.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (addr == MAP_FAILED) {
     close(fd);
