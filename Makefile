@@ -13,23 +13,16 @@ isos_inject.o: isos_inject.c argp_parser.c
 check_warnings:
 	make clean;
 	clang -fsyntax-only -Wall -Wextra -Wuninitialized -Wpointer-arith -Wcast-qual -Wcast-align isos_inject.c argp_parser.c;
-	gcc -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference -Wpointer-arith -Wcast-qual -Wcast-align=strict -o isos_inject isos_inject.c -lbfd;
-	gcc -fanalyzer isos_inject.c -lbfd;
-	clang -g -fsanitize=address,undefined -fno-omit-frame-pointer -o isos_inject-1 isos_inject.c -lbfd;
-	make check_isos_inject-1;
-	clang -g -fsanitize=memory -fno-omit-frame-pointer -o isos_inject-2 isos_inject.c -lbfd;
-	make check_isos_inject-2;
+	gcc -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference -Wpointer-arith -Wcast-qual -Wcast-align=strict -o binaries/isos_inject-1 isos_inject.c -lbfd;
+	gcc -fanalyzer isos_inject.c -lbfd -o binaries/isos_inject-2;
+	clang -g -fsanitize=address,undefined -fno-omit-frame-pointer -o binaries/isos_inject-3 isos_inject.c -lbfd;
+	clang -g -fsanitize=memory -fno-omit-frame-pointer -o binaries/isos_inject-4 isos_inject.c -lbfd;
 
-check_isos_inject-1:
-	ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./isos_inject-1 --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='123'
-	ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./isos_inject-1 --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='123' --modify-entry-function 
-			
-check_isos_inject-2:
-	MSAN_OPTIONS=halt_on_error=1 ./isos_inject-2 --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='123'
-	MSAN_OPTIONS=halt_on_error=1 ./isos_inject-2 --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='123' --modify-entry-function 
-		
+test:
+	make check_warnings;
+	./script.sh
 
 clean:
-	rm -f *.o *.out $(EXE) 
+	rm -f *.o *.out *.txt $(EXE) binaries/*
 
 .PHONY: all clean
