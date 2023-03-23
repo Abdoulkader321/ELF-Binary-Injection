@@ -11,7 +11,11 @@
 
 #define ARCHITECTURE_SIZE 64
 
-void open_binary_with_libbfd(struct arguments *arguments) {
+/**
+ * Open the binary and check that it is an ELF, executable of architecture
+ * 64-bit
+ */
+void check_binary_with_libbfd(struct arguments *arguments) {
   /* Initializing BFD library*/
   bfd_init();
 
@@ -24,16 +28,17 @@ void open_binary_with_libbfd(struct arguments *arguments) {
 
   /* Check that the binary is an ELF, executable of architecture 64-bit */
   if (bfd_check_format(bfd_file, bfd_object) &&
-      ((bfd_get_file_flags(bfd_file) & (unsigned int) EXEC_P) != 0) &&
+      ((bfd_get_file_flags(bfd_file) & (unsigned int)EXEC_P) != 0) &&
       bfd_get_arch_size(bfd_file) == ARCHITECTURE_SIZE) {
 
-    fprintf(stdout, "Success: %s is an excutable ELF of architecture %d bit.",
+    fprintf(stdout,
+            "Success: %s is an excutable ELF of architecture %d bit. \n",
             arguments->elf_file_to_analyze, ARCHITECTURE_SIZE);
   } else {
 
     bfd_close(bfd_file); /* Close binary */
     errx(EXIT_FAILURE,
-         "Error: %s must be an excutable ELF of architecture %d bit.",
+         "Error: %s must be an excutable ELF of architecture %d bit. \n",
          arguments->elf_file_to_analyze, ARCHITECTURE_SIZE);
   }
 
@@ -53,8 +58,13 @@ int main(int argc, char **argv) {
   arguments.argCount = 0;
   arguments.modify_entry_function_address = false;
 
+  /* Parse the arguments */
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
+  /* Check that it is an ELF, executable of architecture 64-bit */
+  check_binary_with_libbfd(&arguments);
+
+  /* Open the file */
   int fd = open(arguments.elf_file_to_analyze, O_RDONLY);
   if (fd == -1) {
     errx(EXIT_FAILURE, "Error while opening the file %s .",
@@ -69,6 +79,8 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
+  /* Mapping between a process address space and the binary. Binary can now be
+   * accessed like an array.  */
   char *addr = mmap(0, fstat_structure.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (addr == MAP_FAILED) {
     close(fd);

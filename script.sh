@@ -53,10 +53,14 @@ do
     test_exit_failure $?
 
     echo "--- Test6 ---"
+    ${exec} --path-to-elf=./README.md --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    test_exit_failure $?
+
+    echo "--- Test7 ---"
     ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_success $?
 
-    echo "--- Test7 ---"
+    echo "--- Test8 ---"
     MSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_success $?	
 
