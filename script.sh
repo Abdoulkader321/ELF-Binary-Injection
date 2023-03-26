@@ -58,7 +58,6 @@ do
     test_exit_failure $?
 
     echo "--- Test6 ---"
-    cp date date_copy;
     ${exec} --path-to-elf=./README.md --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_failure $?
 
@@ -72,4 +71,12 @@ do
     MSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_success $?	
 
+    echo "--- Test9 ---"
+    ${exec} --path-to-elf=./date --path-to-code=./do_not_exist --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
+    test_exit_failure $?
+
+    echo "--- Test10 ---"
+    cp date date_copy;
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
+    test_exit_success $?
 done

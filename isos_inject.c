@@ -13,8 +13,6 @@
 #define ARCHITECTURE_SIZE 64
 #define CORRECT_ALIGNMENT 4096
 
-/* nasm -f elf64 -o inject_code assembly.asm */
-
 /**
  * Open the binary and check that it is an ELF, executable of architecture
  * 64-bit
