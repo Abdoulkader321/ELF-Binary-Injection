@@ -4,12 +4,16 @@
 #include <argp.h>
 #include <bfd.h>
 #include <fcntl.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
 #define ARCHITECTURE_SIZE 64
+#define CORRECT_ALIGNMENT 4096
+
+/* nasm -f elf64 -o inject_code assembly.asm */
 
 /**
  * Open the binary and check that it is an ELF, executable of architecture
@@ -46,31 +50,7 @@ void check_binary_with_libbfd(struct arguments *arguments) {
   bfd_close(bfd_file);
 }
 
-static struct argp argp = {.options = options,
-                           .parser = parse_opt,
-                           .args_doc = NULL,
-                           .doc = doc,
-                           .help_filter = NULL};
-
-int main(int argc, char **argv) {
-
-  struct arguments arguments;
-  arguments.argCount = 0;
-  arguments.modify_entry_function_address = false;
-
-  /* Parse the arguments */
-  argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
-  /* Check that it is an ELF, executable of architecture 64-bit */
-  check_binary_with_libbfd(&arguments);
-
-  /* Open the file */
-  int fd = open(arguments.elf_file_to_analyze, O_RDONLY);
-  if (fd == -1) {
-    errx(EXIT_FAILURE, "Error while opening the file %s .",
-         arguments.elf_file_to_analyze);
-  }
-
+int get_index_of_pt_note_program_header(int fd) {
   /* To get informations on the binary like his size */
   struct stat fstat_structure;
   if (fstat(fd, &fstat_structure) == -1) {
@@ -109,6 +89,35 @@ int main(int argc, char **argv) {
     }
   }
 
+  return index_pt_note;
+}
+
+static struct argp argp = {.options = options,
+                           .parser = parse_opt,
+                           .args_doc = NULL,
+                           .doc = doc,
+                           .help_filter = NULL};
+
+int main(int argc, char **argv) {
+
+  struct arguments arguments;
+  arguments.argCount = 0;
+  arguments.modify_entry_function_address = false;
+
+  /* Parse the arguments */
+  argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+  /* Check that it is an ELF, executable of architecture 64-bit */
+  check_binary_with_libbfd(&arguments);
+
+  /* Open the file */
+  int fd = open(arguments.elf_file_to_analyze, O_RDWR);
+  if (fd == -1) {
+    errx(EXIT_FAILURE, "Error while opening the file %s .",
+         arguments.elf_file_to_analyze);
+  }
+
+  int index_pt_note = get_index_of_pt_note_program_header(fd);
   if (index_pt_note == -1) {
     close(fd);
     errx(EXIT_FAILURE, "Any program header of type PT_NOTE found in %s\n",
@@ -119,7 +128,42 @@ int main(int argc, char **argv) {
             index_pt_note);
   }
 
+  int inject_file_fd = open(arguments.code_to_inject, O_RDONLY);
+  if (inject_file_fd == -1) {
+    errx(EXIT_FAILURE, "Error while opening the file %s .",
+         arguments.code_to_inject);
+  }
+
+  /* To get informations on the inject_code like his size */
+  struct stat fstat_inject;
+  if (fstat(inject_file_fd, &fstat_inject) == -1) {
+    close(fd);
+    perror("fstat");
+    exit(EXIT_FAILURE);
+  }
+
+  int position = lseek(fd, 0, SEEK_END); /* At the end of the binary */
+
+  /* Needed alignment so that the offset and address are congruent modulo
+   * 4096.*/
+  int needed_alignement =
+      (CORRECT_ALIGNMENT - (position % CORRECT_ALIGNMENT)) % CORRECT_ALIGNMENT;
+
+  /* Adding some padding */
+  char buffer[CORRECT_ALIGNMENT];
+  for (int i = 0; i < needed_alignement; i++) {
+    buffer[i] = '0';
+  }
+  write(fd, buffer, needed_alignement);
+
+  /* Code injection at the end of the binary */
+  while ((fstat_inject.st_size = read(inject_file_fd, buffer, sizeof(buffer))) >
+         0) {
+    write(fd, buffer, fstat_inject.st_size);
+  }
+
   close(fd);
+  close(inject_file_fd);
 
   return EXIT_SUCCESS;
 }

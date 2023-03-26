@@ -33,35 +33,43 @@ do
     echo "========== $(basename ${exec}) ==========="
 
     echo "--- Test1 ---"
-    ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
+    cp date date_copy;
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
     test_exit_success $?
 
     echo "--- Test2 ---"
-    ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    cp date date_copy;
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_success $?
 
     echo "--- Test3 ---"
-    ${exec} --path-to-elf=./doNotExist --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    cp date date_copy;
+    ${exec} --path-to-elf=./doNotExist --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test4 ---"
-    ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --base-address='1234' 1> success.txt 2> error.txt
+    cp date date_copy;
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --base-address='1234' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test5 ---"
-    ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='12A34' 1> success.txt 2> error.txt
+    cp date date_copy;
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='12A34' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test6 ---"
-    ${exec} --path-to-elf=./README.md --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    cp date date_copy;
+    ${exec} --path-to-elf=./README.md --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test7 ---"
-    ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    cp date date_copy;
+    ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_success $?
 
     echo "--- Test8 ---"
-    MSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date --path-to-code=./binary_to_inject --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    cp date date_copy;
+    MSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
     test_exit_success $?	
 
 done
