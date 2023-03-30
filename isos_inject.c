@@ -140,25 +140,24 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
-  int position = lseek(fd, 0, SEEK_END); /* At the end of the binary */
+  int end_position_elf = lseek(fd, 0, SEEK_END); /* At the end of the binary */
 
-  /* Needed alignment so that the offset and address are congruent modulo
-   * 4096.*/
-  int needed_alignement =
-      (CORRECT_ALIGNMENT - (position % CORRECT_ALIGNMENT)) % CORRECT_ALIGNMENT;
-
-  /* Adding some padding */
-  char buffer[CORRECT_ALIGNMENT];
-  for (int i = 0; i < needed_alignement; i++) {
-    buffer[i] = '0';
-  }
-  write(fd, buffer, needed_alignement);
+  /* Buffer containing the injection code bytes */
+  char *buffer = malloc(fstat_inject.st_size * sizeof(char));
 
   /* Code injection at the end of the binary */
-  while ((fstat_inject.st_size = read(inject_file_fd, buffer, sizeof(buffer))) >
-         0) {
-    write(fd, buffer, fstat_inject.st_size);
-  }
+  read(inject_file_fd, buffer, fstat_inject.st_size);
+  write(fd, buffer, fstat_inject.st_size);
+
+  /* Computing base address so that the difference with the offset become
+    zero modulo 4096.*/
+  arguments.injected_code_base_address +=
+      (CORRECT_ALIGNMENT -
+       (arguments.injected_code_base_address - end_position_elf) %
+           CORRECT_ALIGNMENT) %
+      CORRECT_ALIGNMENT;
+
+  printf("Computed base address: %d\n", arguments.injected_code_base_address);
 
   close(fd);
   close(inject_file_fd);

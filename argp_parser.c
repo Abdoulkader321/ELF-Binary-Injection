@@ -9,8 +9,9 @@
 const char *argp_program_version = "isos_inject 1.0";
 
 char doc[] =
-    "Example: --path-to-elf=./date --path-to-code=./binary_to_inject "
-    "--new-section-name='abcd' --base-address='123' --modify-entry-function";
+    "Example: cp date date_copy; ./isos_inject --path-to-elf=./date_copy "
+    "--path-to-code=./inject_code --new-section-name='abcd' "
+    "--base-address='70000' --modify-entry-function";
 
 struct argp_option options[] = {
     {"path-to-elf", 'e', "PATH", 0, "Path to ELF file to analyze", 0},
