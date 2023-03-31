@@ -11,7 +11,7 @@ isos_inject.o: isos_inject.c argp_parser.c
 	$(CC) $(CFLAGS) -c $^;
 
 inject_code: inject_code.asm
-	nasm -f elf64 -o $@ $^
+	nasm -o $@ $^
 
 check_warnings:
 	make clean;
