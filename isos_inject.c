@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #define ARCHITECTURE_SIZE 64
-#define CORRECT_ALIGNMENT 4096
+#define ALIGNMENT 4096
 
 /**
  * Open the binary and check that it is an ELF, executable of architecture
@@ -152,10 +152,7 @@ int main(int argc, char **argv) {
   /* Computing base address so that the difference with the offset become
     zero modulo 4096.*/
   arguments.injected_code_base_address +=
-      (CORRECT_ALIGNMENT -
-       (arguments.injected_code_base_address - end_position_elf) %
-           CORRECT_ALIGNMENT) %
-      CORRECT_ALIGNMENT;
+      (end_position_elf - arguments.injected_code_base_address) % ALIGNMENT;
 
   printf("Computed base address: %d\n", arguments.injected_code_base_address);
 
