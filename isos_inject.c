@@ -233,6 +233,16 @@ int main(int argc, char **argv) {
     }
   }
 
+  if (index_of_note_abi_tag == -1) {
+    /* Section header called '.note.ABI-tag' not found */
+
+    free(section_headers);
+    close(fd);
+    close(inject_file_fd);
+
+    errx(EXIT_FAILURE, " '.note.ABI-tag' not found in section headers\n");
+  }
+
   lseek(fd,
         executable_header.e_shoff +
             (index_of_note_abi_tag * sizeof(Elf64_Shdr)),
