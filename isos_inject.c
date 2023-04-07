@@ -12,7 +12,7 @@
 
 #define ARCHITECTURE_SIZE 64
 #define ALIGNMENT 4096
-
+#define ADDR_ALIGN 16
 /**
  * Open the binary and check that it is an ELF, executable of architecture
  * 64-bit
@@ -226,8 +226,8 @@ int main(int argc, char **argv) {
       section_headers[i].sh_addr = arguments.injected_code_base_address;
       section_headers[i].sh_offset = end_position_elf;
       section_headers[i].sh_size = fstat_inject.st_size;
-      section_headers[i].sh_addralign = 16;
-      section_headers[i].sh_flags = SHF_EXECINSTR;
+      section_headers[i].sh_addralign = ADDR_ALIGN;
+      section_headers[i].sh_flags |= SHF_EXECINSTR;
 
       break;
     }
