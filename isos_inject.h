@@ -2,8 +2,12 @@
 #include <stdint.h>
 
 #define PT_NOTE 4              /* Auxiliary information */
+#define PT_LOAD 1              /* Loadable program segment */
 #define SHT_PROGBITS 1         /* Program data */
 #define SHF_EXECINSTR (1 << 2) /* Executable */
+
+/* Legal values for p_flags (segment flags).  */
+#define PF_X		(1 << 0)	/* Segment is executable */
 
 typedef struct {
   unsigned char e_ident[16]; /* Magic number and other info */

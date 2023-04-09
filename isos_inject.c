@@ -347,6 +347,28 @@ int main(int argc, char **argv) {
   arguments.new_section_name[strlen(arguments.new_section_name)] = '\0';
   write(fd, arguments.new_section_name, SIZE_OF_NOTE_ABI_TAG);
 
+  /* Challenge 6 */
+
+  Elf64_Phdr pt_note_ph;
+  memcpy(&pt_note_ph,
+         addr + executable_header.e_phoff + index_pt_note * sizeof(Elf64_Phdr),
+         sizeof(Elf64_Phdr));
+
+  pt_note_ph.p_type = PT_LOAD;
+
+  pt_note_ph.p_offset = section_headers[index_of_note_abi_tag].sh_offset;
+  pt_note_ph.p_vaddr = section_headers[index_of_note_abi_tag].sh_addr;
+  pt_note_ph.p_filesz = section_headers[index_of_note_abi_tag].sh_size;
+  pt_note_ph.p_paddr = 0;
+
+  pt_note_ph.p_flags |= PF_X;
+  pt_note_ph.p_align = 0x1000;
+
+  lseek(fd, executable_header.e_phoff + index_pt_note * sizeof(Elf64_Phdr),
+        SEEK_SET);
+
+  write(fd, &pt_note_ph, sizeof(Elf64_Phdr));
+
   free(section_headers);
 
   close(fd);
