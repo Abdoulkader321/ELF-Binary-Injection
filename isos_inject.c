@@ -94,22 +94,68 @@ void sort_section_headers(Elf64_Shdr *section_headers,
                           int section_headers_number,
                           int index_of_note_abi_tag) {
 
-  int i;
-  for (i = 0; i < section_headers_number; i++) {
+  if ((section_headers[index_of_note_abi_tag - 1].sh_addr <
+       section_headers[index_of_note_abi_tag].sh_addr) &&
+      (section_headers[index_of_note_abi_tag].sh_addr <
+       section_headers[index_of_note_abi_tag + 1].sh_addr)) {
+    /* Already sorted, no need to move */
+    return;
+  }
 
-    if (section_headers[i].sh_addr >
-        section_headers[index_of_note_abi_tag].sh_addr) {
-      break;
+  if (section_headers[index_of_note_abi_tag].sh_addr <
+      section_headers[index_of_note_abi_tag - 1].sh_addr) {
+
+    // Move to left
+
+    /* Search the index where to move it*/
+    int i;
+    for (i = 0; i < section_headers_number; i++) {
+
+      if (section_headers[i].sh_addr >
+          section_headers[index_of_note_abi_tag].sh_addr) {
+        break;
+      }
+    }
+
+    Elf64_Shdr tmp = section_headers[index_of_note_abi_tag];
+
+    /* Shift to left all other section headers */
+    for (int k = index_of_note_abi_tag; k > i; k--) {
+      section_headers[k] = section_headers[k - 1];
+    }
+
+    section_headers[i] = tmp;
+  } else {
+    // Move to right
+
+    /* Search the index where to move it, do not touch the 2 last section
+     * headers*/
+    int i;
+    for (i = 0; i < section_headers_number - 2; i++) {
+
+      if (section_headers[i].sh_addr >
+          section_headers[index_of_note_abi_tag].sh_addr) {
+        break;
+      }
+    }
+
+    Elf64_Shdr tmp = section_headers[index_of_note_abi_tag];
+
+    /* Shift to right all other section headers */
+    int k;
+    for (k = index_of_note_abi_tag; k < i - 1; k++) {
+      section_headers[k] = section_headers[k + 1];
+    }
+
+    section_headers[k] = tmp;
+
+    /* Update the sh_link field to avoir readelf warnings */
+    for (i = 0; i < section_headers_number; i++) {
+      if (section_headers[i].sh_link != 0) {
+        section_headers[i].sh_link--;
+      }
     }
   }
-
-  Elf64_Shdr tmp = section_headers[index_of_note_abi_tag];
-
-  for (int k = index_of_note_abi_tag; k > i; k--) {
-    section_headers[k] = section_headers[k - 1];
-  }
-
-  section_headers[i] = tmp;
 }
 
 static struct argp argp = {.options = options,
