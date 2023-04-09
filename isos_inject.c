@@ -13,6 +13,8 @@
 #define ARCHITECTURE_SIZE 64
 #define ALIGNMENT 4096
 #define ADDR_ALIGN 16
+#define SIZE_OF_NOTE_ABI_TAG 13
+
 /**
  * Open the binary and check that it is an ELF, executable of architecture
  * 64-bit
@@ -90,20 +92,24 @@ int get_index_of_pt_note_program_header(int fd) {
   return index_pt_note;
 }
 
-void sort_section_headers(Elf64_Shdr *section_headers,
+/**
+ * Sort section headers regarding to their adress.
+ * Return True if it has been sorted, else False(it was already sorted)
+ */
+bool sort_section_headers(Elf64_Shdr *section_headers,
                           int section_headers_number,
-                          int index_of_note_abi_tag) {
+                          int *index_of_note_abi_tag) {
 
-  if ((section_headers[index_of_note_abi_tag - 1].sh_addr <
-       section_headers[index_of_note_abi_tag].sh_addr) &&
-      (section_headers[index_of_note_abi_tag].sh_addr <
-       section_headers[index_of_note_abi_tag + 1].sh_addr)) {
+  if ((section_headers[*index_of_note_abi_tag - 1].sh_addr <
+       section_headers[*index_of_note_abi_tag].sh_addr) &&
+      (section_headers[*index_of_note_abi_tag].sh_addr <
+       section_headers[*index_of_note_abi_tag + 1].sh_addr)) {
     /* Already sorted, no need to move */
-    return;
+    return false;
   }
 
-  if (section_headers[index_of_note_abi_tag].sh_addr <
-      section_headers[index_of_note_abi_tag - 1].sh_addr) {
+  if (section_headers[*index_of_note_abi_tag].sh_addr <
+      section_headers[*index_of_note_abi_tag - 1].sh_addr) {
 
     // Move to left
 
@@ -112,19 +118,20 @@ void sort_section_headers(Elf64_Shdr *section_headers,
     for (i = 0; i < section_headers_number; i++) {
 
       if (section_headers[i].sh_addr >
-          section_headers[index_of_note_abi_tag].sh_addr) {
+          section_headers[*index_of_note_abi_tag].sh_addr) {
         break;
       }
     }
 
-    Elf64_Shdr tmp = section_headers[index_of_note_abi_tag];
+    Elf64_Shdr tmp = section_headers[*index_of_note_abi_tag];
 
     /* Shift to left all other section headers */
-    for (int k = index_of_note_abi_tag; k > i; k--) {
+    for (int k = *index_of_note_abi_tag; k > i; k--) {
       section_headers[k] = section_headers[k - 1];
     }
 
     section_headers[i] = tmp;
+    *index_of_note_abi_tag = i;
   } else {
     // Move to right
 
@@ -134,16 +141,16 @@ void sort_section_headers(Elf64_Shdr *section_headers,
     for (i = 0; i < section_headers_number - 2; i++) {
 
       if (section_headers[i].sh_addr >
-          section_headers[index_of_note_abi_tag].sh_addr) {
+          section_headers[*index_of_note_abi_tag].sh_addr) {
         break;
       }
     }
 
-    Elf64_Shdr tmp = section_headers[index_of_note_abi_tag];
+    Elf64_Shdr tmp = section_headers[*index_of_note_abi_tag];
 
     /* Shift to right all other section headers */
     int k;
-    for (k = index_of_note_abi_tag; k < i - 1; k++) {
+    for (k = *index_of_note_abi_tag; k < i - 1; k++) {
       section_headers[k] = section_headers[k + 1];
     }
 
@@ -155,7 +162,11 @@ void sort_section_headers(Elf64_Shdr *section_headers,
         section_headers[i].sh_link--;
       }
     }
+
+    *index_of_note_abi_tag = k;
   }
+
+  return true;
 }
 
 static struct argp argp = {.options = options,
@@ -319,11 +330,22 @@ int main(int argc, char **argv) {
 
   /* Challenge 5 */
 
-  sort_section_headers(section_headers, executable_header.e_shnum,
-                       index_of_note_abi_tag);
+  /* Reorder section headers by section address if it's not ordered*/
+  if (sort_section_headers(section_headers, executable_header.e_shnum,
+                           &index_of_note_abi_tag)) {
 
-  lseek(fd, executable_header.e_shoff, SEEK_SET);
-  write(fd, section_headers, executable_header.e_shnum * sizeof(Elf64_Shdr));
+    lseek(fd, executable_header.e_shoff, SEEK_SET);
+    write(fd, section_headers, executable_header.e_shnum * sizeof(Elf64_Shdr));
+  }
+
+  /* Set the name of the injected section*/
+  lseek(fd,
+        section_headers[index_of_shstrtab].sh_offset +
+            section_headers[index_of_note_abi_tag].sh_name,
+        SEEK_SET);
+
+  arguments.new_section_name[strlen(arguments.new_section_name)] = '\0';
+  write(fd, arguments.new_section_name, SIZE_OF_NOTE_ABI_TAG);
 
   free(section_headers);
 
