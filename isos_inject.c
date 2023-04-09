@@ -90,6 +90,28 @@ int get_index_of_pt_note_program_header(int fd) {
   return index_pt_note;
 }
 
+void sort_section_headers(Elf64_Shdr *section_headers,
+                          int section_headers_number,
+                          int index_of_note_abi_tag) {
+
+  int i;
+  for (i = 0; i < section_headers_number; i++) {
+
+    if (section_headers[i].sh_addr >
+        section_headers[index_of_note_abi_tag].sh_addr) {
+      break;
+    }
+  }
+
+  Elf64_Shdr tmp = section_headers[index_of_note_abi_tag];
+
+  for (int k = index_of_note_abi_tag; k > i; k--) {
+    section_headers[k] = section_headers[k - 1];
+  }
+
+  section_headers[i] = tmp;
+}
+
 static struct argp argp = {.options = options,
                            .parser = parse_opt,
                            .args_doc = NULL,
@@ -248,6 +270,15 @@ int main(int argc, char **argv) {
             (index_of_note_abi_tag * sizeof(Elf64_Shdr)),
         SEEK_SET);
   write(fd, &section_headers[index_of_note_abi_tag], sizeof(Elf64_Shdr));
+
+  /* Challenge 5 */
+
+  sort_section_headers(section_headers, executable_header.e_shnum,
+                       index_of_note_abi_tag);
+
+  lseek(fd, executable_header.e_shoff, SEEK_SET);
+  write(fd, section_headers, executable_header.e_shnum * sizeof(Elf64_Shdr));
+
   free(section_headers);
 
   close(fd);
