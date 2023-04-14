@@ -355,15 +355,14 @@ int main(int argc, char **argv) {
          sizeof(Elf64_Phdr));
 
   pt_note_ph.p_type = PT_LOAD;
-
+  pt_note_ph.p_flags |= PF_X;
+  pt_note_ph.p_align = 0x1000;
+  
   pt_note_ph.p_offset = section_headers[index_pt_note].sh_offset;
   pt_note_ph.p_paddr = section_headers[index_pt_note].sh_addr;
   pt_note_ph.p_vaddr = section_headers[index_pt_note].sh_addr;
   pt_note_ph.p_filesz = fstat_inject.st_size;
   pt_note_ph.p_memsz = section_headers[index_pt_note].sh_size;
-
-  pt_note_ph.p_flags |= PF_X;
-  pt_note_ph.p_align = 0x1000;
 
   lseek(fd, executable_header.e_phoff + index_pt_note * sizeof(Elf64_Phdr),
         SEEK_SET);
