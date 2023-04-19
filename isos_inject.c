@@ -58,7 +58,11 @@ int get_index_of_first_program_header(Elf64_Ehdr executable_header,
   /* Initializing of program header number i */
   Elf64_Phdr *program_header =
       (Elf64_Phdr *)malloc(executable_header.e_phnum * sizeof(Elf64_Phdr));
-  ;
+
+  if (program_header == NULL) {
+    errx(EXIT_FAILURE, "Error while calling malloc \n");
+  }
+
   memcpy(program_header, *addr + executable_header.e_phoff,
          executable_header.e_phnum * sizeof(Elf64_Phdr));
 
@@ -372,14 +376,14 @@ int main(int argc, char **argv) {
 
   if (arguments.modify_entry_function_address) {
 
-    printf("-- Entry point changed -- \n");
+    printf("-- Entry point changed successfully -- \n");
     executable_header.e_entry = arguments.injected_code_base_address;
     lseek(fd, 0, SEEK_SET);
     write(fd, &executable_header, sizeof(Elf64_Ehdr));
 
   } else {
 
-    printf("-- .got.plt overwrited -- \n");
+    printf("-- .got.plt overwrited successfully -- \n");
     lseek(fd, HIJACK_ADDRESS_GOT_ENTRY, SEEK_SET);
     write(fd, &arguments.injected_code_base_address,
           sizeof(arguments.injected_code_base_address));
