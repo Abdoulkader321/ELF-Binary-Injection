@@ -14,6 +14,7 @@
 #define ALIGNMENT 4096
 #define ADDR_ALIGN 16
 #define SIZE_OF_NOTE_ABI_TAG 13
+#define HIJACK_ADDRESS_GOT_ENTRY 0x10038 /* Localtime is overwrited */
 
 /**
  * Open the binary and check that it is an ELF, executable of architecture
@@ -292,6 +293,7 @@ int main(int argc, char **argv) {
   printf("Index of section header '.shstrtab' %d \n", index_of_shstrtab);
 
   int index_of_note_abi_tag = -1;
+
   for (int i = 0; i < executable_header.e_shnum; i++) {
     char *sh_name =
         (char *)(addr + section_headers[index_of_shstrtab].sh_offset +
@@ -307,7 +309,7 @@ int main(int argc, char **argv) {
       section_headers[i].sh_size = fstat_inject.st_size;
       section_headers[i].sh_addralign = ADDR_ALIGN;
       section_headers[i].sh_flags |= SHF_EXECINSTR;
-
+      
       break;
     }
   }
@@ -357,17 +359,34 @@ int main(int argc, char **argv) {
   pt_note_ph.p_type = PT_LOAD;
   pt_note_ph.p_flags |= PF_X;
   pt_note_ph.p_align = 0x1000;
-  
-  pt_note_ph.p_offset = section_headers[index_pt_note].sh_offset;
-  pt_note_ph.p_paddr = section_headers[index_pt_note].sh_addr;
-  pt_note_ph.p_vaddr = section_headers[index_pt_note].sh_addr;
+
+  pt_note_ph.p_offset = section_headers[index_of_note_abi_tag].sh_offset;
+  pt_note_ph.p_paddr = section_headers[index_of_note_abi_tag].sh_addr;
+  pt_note_ph.p_vaddr = section_headers[index_of_note_abi_tag].sh_addr;
   pt_note_ph.p_filesz = fstat_inject.st_size;
-  pt_note_ph.p_memsz = section_headers[index_pt_note].sh_size;
+  pt_note_ph.p_memsz = section_headers[index_of_note_abi_tag].sh_size;
 
   lseek(fd, executable_header.e_phoff + index_pt_note * sizeof(Elf64_Phdr),
         SEEK_SET);
 
   write(fd, &pt_note_ph, sizeof(Elf64_Phdr));
+
+  /* Challenge 7 */
+
+  if (arguments.modify_entry_function_address) {
+
+    printf("-- Entry point changed -- \n");
+    executable_header.e_entry = arguments.injected_code_base_address;
+    lseek(fd, 0, SEEK_SET);
+    write(fd, &executable_header, sizeof(Elf64_Ehdr));
+
+  } else {
+
+    printf("-- .got.plt overwrited -- \n");
+    lseek(fd, HIJACK_ADDRESS_GOT_ENTRY, SEEK_SET);
+    write(fd, &arguments.injected_code_base_address,
+          sizeof(arguments.injected_code_base_address));
+  }
 
   free(section_headers);
 

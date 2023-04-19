@@ -1,8 +1,8 @@
 CFLAGS = -Wall -Wextra -pedantic -O2 -Warray-bounds -Wsequence-point -Walloc-zero -Wnull-dereference -Wpointer-arith -Wcast-qual -Wcast-align=strict
 
-EXE = isos_inject inject_code isos_inject-1 isos_inject-2
+EXE = isos_inject isos_inject-1 isos_inject-2 inject_code_for_got_plt_hijack  inject_code_for_entry_point_modification
 
-all: isos_inject inject_code
+all: isos_inject inject_code_for_got_plt_hijack  inject_code_for_entry_point_modification 
 
 isos_inject: isos_inject.o
 	$(CC) $(CFLAGS) -o $@ $^ -lbfd;
@@ -10,8 +10,11 @@ isos_inject: isos_inject.o
 isos_inject.o: isos_inject.c argp_parser.c
 	$(CC) $(CFLAGS) -c $^;
 
-inject_code: inject_code.asm
-	nasm -o $@ $^
+inject_code_for_entry_point_modification: inject_code_for_entry_point_modification.asm
+	nasm -f bin -o $@ $^
+
+inject_code_for_got_plt_hijack: inject_code_for_got_plt_hijack.asm
+	nasm -f bin -o $@ $^
 
 check_warnings:
 	make clean;

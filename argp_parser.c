@@ -10,8 +10,8 @@ const char *argp_program_version = "isos_inject 1.0";
 
 char doc[] =
     "Example: cp date date_copy; ./isos_inject --path-to-elf=./date_copy "
-    "--path-to-code=./inject_code --new-section-name='abcd' "
-    "--base-address='70000' --modify-entry-function";
+    "--path-to-code=./inject_code_for_got_plt_hijack "
+    "--new-section-name='.injected' --base-address='0x500000'";
 
 struct argp_option options[] = {
     {"path-to-elf", 'e', "PATH", 0, "Path to ELF file to analyze", 0},
@@ -60,7 +60,7 @@ error_t parse_opt(int key, char *arg, struct argp_state *state) {
 
   case 'a':
 
-    arguments->injected_code_base_address = strtol(arg, &endPtr, 10);
+    arguments->injected_code_base_address = (int)strtol(arg, &endPtr, 16);
     arguments->argCount++;
 
     if (strcmp(endPtr, "")) {
