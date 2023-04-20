@@ -34,49 +34,49 @@ do
 
     echo "--- Test1 ---"
     cp date date_copy;
-    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_entry_point_modification --new-section-name='abcd' --base-address='0x500000' --modify-entry-function 1> success.txt 2> error.txt
     test_exit_success $?
 
     echo "--- Test2 ---"
     cp date date_copy;
-    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_got_plt_hijack --new-section-name='abcd' --base-address='0x500000' 1> success.txt 2> error.txt
     test_exit_success $?
 
     echo "--- Test3 ---"
     cp date date_copy;
-    ${exec} --path-to-elf=./doNotExist --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./doNotExist --path-to-code=./inject_code_for_got_plt_hijack --new-section-name='abcd' --base-address='0x500000' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test4 ---"
     cp date date_copy;
-    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --base-address='1234' 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_got_plt_hijack --base-address='0x500000' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test5 ---"
     cp date date_copy;
-    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='12A34' 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_got_plt_hijack --new-section-name='abcd' --base-address='0xNoTExIsT' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test6 ---"
-    ${exec} --path-to-elf=./README.md --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./README.md --path-to-code=./inject_code_for_got_plt_hijack --new-section-name='abcd' --base-address='0x500000' 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test7 ---"
     cp date date_copy;
-    ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_got_plt_hijack --new-section-name='abcd' --base-address='0x500000' 1> success.txt 2> error.txt
     test_exit_success $?
 
     echo "--- Test8 ---"
     cp date date_copy;
-    MSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' 1> success.txt 2> error.txt
+    MSAN_OPTIONS=halt_on_error=1 ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_got_plt_hijack --new-section-name='abcd' --base-address='0x500000' 1> success.txt 2> error.txt
     test_exit_success $?	
 
     echo "--- Test9 ---"
-    ${exec} --path-to-elf=./date --path-to-code=./do_not_exist --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./date --path-to-code=./do_not_exist --new-section-name='abcd' --base-address='0x500000' --modify-entry-function 1> success.txt 2> error.txt
     test_exit_failure $?
 
     echo "--- Test10 ---"
     cp date date_copy;
-    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code --new-section-name='abcd' --base-address='1234' --modify-entry-function 1> success.txt 2> error.txt
+    ${exec} --path-to-elf=./date_copy --path-to-code=./inject_code_for_entry_point_modification --new-section-name='abcd' --base-address='0x500000' --modify-entry-function 1> success.txt 2> error.txt
     test_exit_success $?
 done

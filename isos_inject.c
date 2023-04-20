@@ -51,6 +51,9 @@ void check_binary_with_libbfd(struct arguments *arguments) {
   bfd_close(bfd_file);
 }
 
+/**
+ * Return the index of the first program header of type PT_NOTE
+ */
 int get_index_of_first_program_header(Elf64_Ehdr executable_header,
                                       char **addr) {
 
@@ -78,6 +81,10 @@ int get_index_of_first_program_header(Elf64_Ehdr executable_header,
   return index_pt_note;
 }
 
+/**
+ * Append the injected code to the end of ELF and compute also the new base
+ * address (given by the user).
+ */
 int append_inject_code_to_elf_and_compute_new_base_address(
     int fd, struct arguments *arguments) {
 
@@ -116,6 +123,9 @@ int append_inject_code_to_elf_and_compute_new_base_address(
   return end_position_elf;
 }
 
+/**
+ * Return the index of the section header .note.ABI-tag
+ */
 int get_index_note_abi_tag_section_header(Elf64_Shdr *section_headers,
                                           Elf64_Ehdr executable_header,
                                           char *addr) {
@@ -138,6 +148,9 @@ int get_index_note_abi_tag_section_header(Elf64_Shdr *section_headers,
   return index_of_note_abi_tag;
 }
 
+/**
+ * Return the index of the section header .got.plt
+ */
 int get_index_got_plt_section_header(Elf64_Shdr *section_headers,
                                      Elf64_Ehdr executable_header, char *addr) {
   int index_of_got_plt = -1;
@@ -158,6 +171,9 @@ int get_index_got_plt_section_header(Elf64_Shdr *section_headers,
   return index_of_got_plt;
 }
 
+/**
+ * Overwrite the fields of the program header of type PT_NOTE
+ */
 void overwrite_pt_note_program_header(Elf64_Phdr *pt_note_ph,
                                       Elf64_Shdr *section_headers,
                                       int index_of_note_abi_tag) {
