@@ -14,7 +14,7 @@
 #define ALIGNMENT 4096
 #define ADDR_ALIGN 16
 #define SIZE_OF_NOTE_ABI_TAG 13
-#define HIJACK_ADDRESS_GOT_ENTRY 0x10038 /* Localtime is overwrited */
+#define HIJACK_ADDRESS_GOT_ENTRY 0x610038 /* Localtime is overwrited */
 
 /**
  * Open the binary and check that it is an ELF, executable of architecture
@@ -136,6 +136,26 @@ int get_index_note_abi_tag_section_header(Elf64_Shdr *section_headers,
   }
 
   return index_of_note_abi_tag;
+}
+
+int get_index_got_plt_section_header(Elf64_Shdr *section_headers,
+                                     Elf64_Ehdr executable_header, char *addr) {
+  int index_of_got_plt = -1;
+
+  for (int i = 0; i < executable_header.e_shnum; i++) {
+    char *sh_name =
+        (char *)(addr +
+                 section_headers[executable_header.e_shstrndx].sh_offset +
+                 section_headers[i].sh_name); /* Section header name */
+
+    if (strcmp(".got.plt", sh_name) == 0) {
+      index_of_got_plt = i;
+
+      break;
+    }
+  }
+
+  return index_of_got_plt;
 }
 
 void overwrite_pt_note_program_header(Elf64_Phdr *pt_note_ph,
@@ -375,18 +395,40 @@ int main(int argc, char **argv) {
   /* Challenge 7 */
 
   if (arguments.modify_entry_function_address) {
+    /* Change entry point */
 
-    printf("-- Entry point changed successfully -- \n");
     executable_header.e_entry = arguments.injected_code_base_address;
     lseek(fd, 0, SEEK_SET);
     write(fd, &executable_header, sizeof(Elf64_Ehdr));
 
-  } else {
+    printf("-- Entry point changed successfully -- \n");
 
-    printf("-- .got.plt overwrited successfully -- \n");
-    lseek(fd, HIJACK_ADDRESS_GOT_ENTRY, SEEK_SET);
+  } else {
+    /* Overwrite .got.plt */
+
+    int index_got_plt = get_index_got_plt_section_header(
+        section_headers, executable_header, addr);
+
+    if (index_got_plt == -1) {
+      /* Section header called '.got.plt' not found */
+
+      free(section_headers);
+      close(fd);
+
+      errx(EXIT_FAILURE, " '.got.plt' not found in section headers\n");
+    }
+
+    int got_start_real_address = section_headers[index_got_plt].sh_offset;
+    int got_start_virtual_address = section_headers[index_got_plt].sh_addr;
+
+    lseek(fd,
+          got_start_real_address +
+              (HIJACK_ADDRESS_GOT_ENTRY - got_start_virtual_address),
+          SEEK_SET);
     write(fd, &arguments.injected_code_base_address,
           sizeof(arguments.injected_code_base_address));
+
+    printf("-- .got.plt overwrited successfully -- \n");
   }
 
   free(section_headers);
