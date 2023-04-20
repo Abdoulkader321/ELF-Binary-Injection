@@ -12,14 +12,17 @@ main:
   push rdi
   push r11
 
-  mov rdi, 1 ; stdout
-  lea rsi, [rel string] ; message address
-  mov rdx, [rel len] ; message length
-  mov rax, 1 ; write syscall number
-  syscall
+  ; write
+  mov rax, 1              ; System call number (write)
+  mov rdi, 1              ; stdout
+  lea rsi, [rel message]  ; message to display
+  mov rdx, [rel len]      ; message length
+  syscall                 ; kernel call
 
-  mov rax, 60
-  syscall
+  ; exit
+  mov rax, 60 ; System call number (exit)
+  mov rdi, 0  ; success status code
+  syscall     ; kernel call
 
 
   ; load context
@@ -30,5 +33,5 @@ main:
   pop rcx
   pop rax
 
-string: db "Je suis trop un hacker", 10, 0
-len: dd $-string
+message: db "Je suis trop un hacker", 0xA, 0x0
+len: dd $-message

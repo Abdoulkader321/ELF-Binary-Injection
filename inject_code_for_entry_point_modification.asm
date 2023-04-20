@@ -12,12 +12,12 @@ main:
   push rdi
   push r11
 
-  mov rdi, 1 ; stdout
-  lea rsi, [rel string] ; message address
-  mov rdx, [rel len] ; message length
-  mov rax, 1 ; write syscall number
-  syscall
-
+  ; write
+  mov rax, 1              ; System call number (write)
+  mov rdi, 1              ; stdout
+  lea rsi, [rel message]  ; message to display
+  mov rdx, [rel len]      ; message length
+  syscall                 ; kernel call
 
   ; load context
   pop r11
@@ -27,9 +27,10 @@ main:
   pop rcx
   pop rax
 
+  ; call original entry point
   push 0x4022e0
   ret
 
 
-string: db "Je suis trop un hacker", 10, 0
-len: dd $-string
+message: db "Je suis trop un hacker", 0xA, 0x0
+len: dd $-message
